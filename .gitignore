@@ -1,2 +1,16 @@
+# raw and generated data — too large for git
+data/yellow_tripdata*.parquet
+data/taxi_zone_lookup.csv
+data/clean_trips.csv
+data/excluded_records.csv
+data/taxi.db
+data/taxi_dump.sql
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
 __pycache__/
 *.pyc
