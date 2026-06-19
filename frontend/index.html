@@ -1,1 +1,103 @@
-<!-- Dianah's file — dashboard -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Urban Mobility Data Explorer</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <h1>Urban Mobility Data Explorer</h1>
+    </div>
+    <p class="subtitle">How New York City moves — NYC Yellow Taxi trips</p>
+  </header>
+
+  <main>
+    <section class="filters">
+      <div class="field">
+        <label for="borough">Borough</label>
+        <select id="borough">
+          <option value="">All boroughs</option>
+          <option value="Manhattan">Manhattan</option>
+          <option value="Brooklyn">Brooklyn</option>
+          <option value="Queens">Queens</option>
+          <option value="Bronx">Bronx</option>
+          <option value="Staten Island">Staten Island</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="timeOfDay">Time of day</label>
+        <select id="timeOfDay">
+          <option value="">All day</option>
+          <option value="morning">Morning</option>
+          <option value="afternoon">Afternoon</option>
+          <option value="evening">Evening</option>
+          <option value="night">Night</option>
+        </select>
+      </div>
+      <button id="applyBtn">Apply filters</button>
+    </section>
+
+    <section class="cards">
+      <div class="card">
+        <span class="card-label">Trips shown</span>
+        <span class="card-value" id="statTrips">—</span>
+      </div>
+      <div class="card">
+        <span class="card-label">Avg distance (mi)</span>
+        <span class="card-value" id="statDistance">—</span>
+      </div>
+      <div class="card">
+        <span class="card-label">Avg fare ($)</span>
+        <span class="card-value" id="statFare">—</span>
+      </div>
+      <div class="card">
+        <span class="card-label">Avg speed (mph)</span>
+        <span class="card-value" id="statSpeed">—</span>
+      </div>
+    </section>
+
+    <section class="charts">
+      <div class="panel">
+        <h2>Busiest pickup zones</h2>
+        <canvas id="zonesChart"></canvas>
+      </div>
+      <div class="panel">
+        <h2>Fare per mile by time of day</h2>
+        <canvas id="fareChart"></canvas>
+      </div>
+      <div class="panel">
+        <h2>Average speed by time of day</h2>
+        <canvas id="speedChart"></canvas>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Recent trips</h2>
+      <table id="tripsTable">
+        <thead>
+          <tr>
+            <th>Pickup</th>
+            <th>Zone</th>
+            <th>Distance</th>
+            <th>Fare</th>
+            <th>Speed</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    <p>Urban Mobility Data Explorer — built with Flask, SQLite and Chart.js</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
