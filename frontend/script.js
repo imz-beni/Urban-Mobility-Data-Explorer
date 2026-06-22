@@ -105,7 +105,7 @@ async function render() {
     drawLine("speedChart", speedData.map(d => d.label), speedData.map(d => d.value), "mph");
 }
 
-// ── Map ──────────────────────────────────────────────────────────────────────
+// map setup
 const mapInstance = L.map("map", { zoomControl: true }).setView([40.73, -73.98], 11);
 
 L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
