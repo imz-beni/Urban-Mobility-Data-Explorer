@@ -4,6 +4,8 @@ A fullstack web application that processes, stores, and visualises NYC Yellow Ta
 
 **Video Walkthrough:** [Watch on YouTube](https://www.youtube.com/watch?v=JcvpF4ztFW8)
 
+**Scrum Board:** [View on GitHub Projects](https://github.com/users/Teta-Dianah/projects/2)
+
 ---
 
 ## Team

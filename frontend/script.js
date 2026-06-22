@@ -81,11 +81,6 @@ function fillTable(trips) {
     }
 }
 
-async function loadBusiestZones() {
-    const zones = await get("/busiest-zones");
-    drawBar("zonesChart", zones.map(z => z.zone), zones.map(z => z.trips), "Trips");
-}
-
 async function render() {
     const borough   = document.getElementById("borough").value;
     const timeOfDay = document.getElementById("timeOfDay").value;
@@ -93,16 +88,19 @@ async function render() {
     if (borough)   params.set("borough", borough);
     if (timeOfDay) params.set("time_of_day", timeOfDay);
 
-    const trips = await get(`/trips?${params}`);
+    const [trips, zones, fareData, speedData] = await Promise.all([
+        get(`/trips?${params}`),
+        get(`/busiest-zones?${params}`),
+        get(`/fare-by-time?${params}`),
+        get(`/speed-by-time?${params}`),
+    ]);
 
     updateCards(trips);
     fillTable(trips);
 
-    const fareData  = groupAvg(trips, "time_of_day", "fare_per_mile");
-    drawBar("fareChart", fareData.map(d => d.label), fareData.map(d => d.value), "$/mile");
-
-    const speedData = groupAvg(trips, "time_of_day", "avg_speed_mph");
-    drawLine("speedChart", speedData.map(d => d.label), speedData.map(d => d.value), "mph");
+    drawBar("zonesChart", zones.map(z => z.zone), zones.map(z => z.trips), "Trips");
+    drawBar("fareChart", fareData.map(d => d.time_of_day), fareData.map(d => d.avg_fare_per_mile), "$/mile");
+    drawLine("speedChart", speedData.map(d => d.time_of_day), speedData.map(d => d.avg_speed), "mph");
 }
 
 // map setup
@@ -161,6 +159,5 @@ async function loadMap() {
 
 document.getElementById("applyBtn").addEventListener("click", () => { render(); loadMap(); });
 
-loadBusiestZones();
 render();
 loadMap();
