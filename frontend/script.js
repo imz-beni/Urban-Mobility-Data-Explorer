@@ -8,9 +8,23 @@ async function get(path) {
     return res.json();
 }
 
+function groupAvg(rows, groupKey, valueKey) {
+    const buckets = {};
+    for (const r of rows) {
+        const key = r[groupKey];
+        if (!buckets[key]) buckets[key] = { sum: 0, count: 0 };
+        buckets[key].sum   += Number(r[valueKey]);
+        buckets[key].count += 1;
+    }
+    const order = ["morning", "afternoon", "evening", "night"];
+    return order
+        .filter(k => buckets[k])
+        .map(k => ({ label: k, value: +(buckets[k].sum / buckets[k].count).toFixed(2) }));
+}
+
 function average(rows, key) {
     if (!rows.length) return 0;
-    return rows.reduce((s, r) => s + r[key], 0) / rows.length;
+    return rows.reduce((s, r) => s + Number(r[key]), 0) / rows.length;
 }
 
 function drawBar(id, labels, values, label) {
@@ -67,18 +81,12 @@ function fillTable(trips) {
     }
 }
 
-async function renderCharts() {
+async function loadBusiestZones() {
     const zones = await get("/busiest-zones");
     drawBar("zonesChart", zones.map(z => z.zone), zones.map(z => z.trips), "Trips");
-
-    const fare = await get("/fare-by-time");
-    drawBar("fareChart", fare.map(f => f.time_of_day), fare.map(f => f.avg_fare_per_mile), "$/mile");
-
-    const speed = await get("/speed-by-time");
-    drawLine("speedChart", speed.map(s => s.time_of_day), speed.map(s => s.avg_speed), "mph");
 }
 
-async function renderTrips() {
+async function render() {
     const borough   = document.getElementById("borough").value;
     const timeOfDay = document.getElementById("timeOfDay").value;
     const params    = new URLSearchParams();
@@ -86,11 +94,18 @@ async function renderTrips() {
     if (timeOfDay) params.set("time_of_day", timeOfDay);
 
     const trips = await get(`/trips?${params}`);
+
     updateCards(trips);
     fillTable(trips);
+
+    const fareData  = groupAvg(trips, "time_of_day", "fare_per_mile");
+    drawBar("fareChart", fareData.map(d => d.label), fareData.map(d => d.value), "$/mile");
+
+    const speedData = groupAvg(trips, "time_of_day", "avg_speed_mph");
+    drawLine("speedChart", speedData.map(d => d.label), speedData.map(d => d.value), "mph");
 }
 
-document.getElementById("applyBtn").addEventListener("click", renderTrips);
+document.getElementById("applyBtn").addEventListener("click", render);
 
-renderCharts();
-renderTrips();
+loadBusiestZones();
+render();
