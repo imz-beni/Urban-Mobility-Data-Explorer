@@ -11,7 +11,7 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "taxi.db")
 
 def query_db(sql, args=()):
     conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row          # rows behave like dicts
+    conn.row_factory = sqlite3.Row
     rows = conn.execute(sql, args).fetchall()
     conn.close()
     return [dict(r) for r in rows]
