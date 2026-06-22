@@ -66,7 +66,9 @@ Urban-Mobility-Data-Explorer/
 │   ├── taxi_zones.*      # NYC taxi zone shapefiles (source)
 │   └── taxi_zones.geojson # WGS84 GeoJSON for the map (generated)
 ├── docs/
+│   ├── algorithm.md      # Custom ranking algorithm explanation
 │   ├── insights.sql      # 3 analytical SQL queries
+│   ├── report.pdf        # Technical report
 │   └── run_insights.py   # Runs and prints insight results
 └── frontend/
     ├── index.html        # Dashboard — filters, stat cards, charts, table
