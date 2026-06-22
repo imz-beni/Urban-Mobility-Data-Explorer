@@ -2,7 +2,7 @@
 
 A fullstack web application that processes, stores, and visualises NYC Yellow Taxi trip data to reveal how the city moves — by location, time, fare, and speed.
 
-**Video Walkthrough:** [Watch on YouTube](https://www.youtube.com/watch?v=JcvpF4ztFW8)
+**Video Walkthrough:** [Watch on YouTube](https://youtu.be/_vT_EuYWOiI)
 
 **Scrum Board:** [View on GitHub Projects](https://github.com/users/Teta-Dianah/projects/2)
 
