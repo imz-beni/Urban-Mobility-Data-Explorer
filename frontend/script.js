@@ -105,7 +105,62 @@ async function render() {
     drawLine("speedChart", speedData.map(d => d.label), speedData.map(d => d.value), "mph");
 }
 
-document.getElementById("applyBtn").addEventListener("click", render);
+// ── Map ──────────────────────────────────────────────────────────────────────
+const mapInstance = L.map("map", { zoomControl: true }).setView([40.73, -73.98], 11);
+
+L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+    attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+    subdomains: "abcd",
+    maxZoom: 19,
+}).addTo(mapInstance);
+
+let geoLayer = null;
+
+function tripColor(count, max) {
+    if (!count || count === 0) return "#eef1f8";
+    const t = count / max;
+    if (t < 0.25) return "#c6dbef";
+    if (t < 0.5)  return "#6baed6";
+    if (t < 0.75) return "#2171b5";
+    return "#08306b";
+}
+
+async function loadMap() {
+    const borough   = document.getElementById("borough").value;
+    const timeOfDay = document.getElementById("timeOfDay").value;
+    const params    = new URLSearchParams();
+    if (borough)   params.set("borough", borough);
+    if (timeOfDay) params.set("time_of_day", timeOfDay);
+
+    const fc = await get(`/geojson?${params}`);
+    if (!fc.features || fc.features.length === 0) return;
+
+    const counts = fc.features.map(f => f.properties.trips || 0);
+    const max    = Math.max(...counts) || 1;
+
+    if (geoLayer) { mapInstance.removeLayer(geoLayer); geoLayer = null; }
+
+    geoLayer = L.geoJSON(fc, {
+        style(feature) {
+            return {
+                fillColor:   tripColor(feature.properties.trips, max),
+                fillOpacity: 0.75,
+                color:       "#ffffff",
+                weight:      0.8,
+            };
+        },
+        onEachFeature(feature, layer) {
+            const p = feature.properties;
+            layer.bindTooltip(
+                `<strong>${p.zone}</strong><br>${p.borough}<br>${p.trips || 0} pickup${p.trips === 1 ? "" : "s"}`,
+                { sticky: true, className: "map-tooltip" }
+            );
+        },
+    }).addTo(mapInstance);
+}
+
+document.getElementById("applyBtn").addEventListener("click", () => { render(); loadMap(); });
 
 loadBusiestZones();
 render();
+loadMap();

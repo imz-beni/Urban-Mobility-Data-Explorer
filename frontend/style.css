@@ -261,6 +261,52 @@ footer {
   font-size: 0.85rem;
 }
 
+#map {
+  height: 440px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+
+.map-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.legend-title {
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.legend-scale {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.legend-item i {
+  width: 18px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid rgba(0,0,0,0.1);
+  display: inline-block;
+}
+
 @media (max-width: 760px) {
   .charts { grid-template-columns: 1fr; }
   .cards { grid-template-columns: repeat(2, 1fr); }

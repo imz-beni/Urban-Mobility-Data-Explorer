@@ -2,11 +2,13 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import sqlite3
 import os
+import json
 
 app = Flask(__name__)
 CORS(app)          
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "taxi.db")
+DB_PATH      = os.path.join(os.path.dirname(__file__), "..", "data", "taxi.db")
+GEOJSON_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "taxi_zones.geojson")
 
 
 def query_db(sql, args=()):
@@ -107,6 +109,34 @@ def speed_by_time():
         "FROM trips WHERE 1=1" + where +
         " GROUP BY time_of_day ORDER BY " + _TOD_ORDER, args
     ))
+
+
+@app.route("/api/geojson")
+def geojson():
+    """Serve NYC taxi-zone boundaries (WGS84) for the map, with a trip count
+    attached to each zone so the frontend can choropleth-shade it. Honors the
+    same ?borough= / ?time_of_day= filters as the other routes, so the map
+    moves with the dashboard. The geometry was reprojected from the source
+    Shapefile (NY State Plane, EPSG:2263) to lon/lat (EPSG:4326)."""
+    if not os.path.exists(GEOJSON_PATH):
+        # degrade cleanly until the geojson file is present
+        return jsonify({"type": "FeatureCollection", "features": []})
+
+    with open(GEOJSON_PATH) as f:
+        fc = json.load(f)
+
+    # trip counts per pickup zone, keyed on location_id to match the geojson
+    where, args = build_filters(alias="t.")
+    rows = query_db(
+        "SELECT z.location_id AS location_id, COUNT(*) AS trips "
+        "FROM trips t JOIN zones z ON t.pu_zone_id = z.zone_id "
+        "WHERE 1=1" + where + " GROUP BY z.location_id", args)
+    counts = {r["location_id"]: r["trips"] for r in rows}
+
+    for feat in fc["features"]:
+        feat["properties"]["trips"] = counts.get(feat["properties"]["location_id"], 0)
+
+    return jsonify(fc)
 
 
 if __name__ == "__main__":

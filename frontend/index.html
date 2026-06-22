@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Urban Mobility Data Explorer</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
   <header class="topbar">
@@ -73,6 +75,21 @@
       <div class="panel">
         <h2>Average speed by time of day</h2>
         <canvas id="speedChart"></canvas>
+      </div>
+    </section>
+
+    <section class="panel map-panel">
+      <h2>Trip density by zone</h2>
+      <div id="map"></div>
+      <div class="map-legend">
+        <span class="legend-title">Pickups</span>
+        <div class="legend-scale">
+          <span class="legend-item"><i style="background:#eef1f8"></i>0</span>
+          <span class="legend-item"><i style="background:#c6dbef"></i>Low</span>
+          <span class="legend-item"><i style="background:#6baed6"></i>Mid</span>
+          <span class="legend-item"><i style="background:#2171b5"></i>High</span>
+          <span class="legend-item"><i style="background:#08306b"></i>Peak</span>
+        </div>
       </div>
     </section>
 

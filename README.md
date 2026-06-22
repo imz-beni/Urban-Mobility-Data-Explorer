@@ -52,14 +52,17 @@ yellow_tripdata.parquet          taxi_zone_lookup.csv
 ```
 Urban-Mobility-Data-Explorer/
 ├── backend/
-│   ├── app.py            # Flask API — 4 routes + zone-ranking algorithm
+│   ├── app.py            # Flask API — 5 routes + zone-ranking algorithm
 │   ├── clean_data.py     # Cleans raw parquet data, engineers 3 features
 │   ├── build_db.py       # Loads clean_trips.csv into normalised SQLite
 │   ├── schema.sql        # 3-table schema with 6 indexes
+│   ├── shp_to_geojson.py # Converts taxi_zones.shp → taxi_zones.geojson (run once)
 │   └── requirements.txt
 ├── data/
 │   ├── sample_trips.csv  # 100-row sample for local development
-│   └── taxi_dump.sql     # Full SQLite database dump
+│   ├── taxi_dump.sql     # Full SQLite database dump
+│   ├── taxi_zones.*      # NYC taxi zone shapefiles (source)
+│   └── taxi_zones.geojson # WGS84 GeoJSON for the map (generated)
 ├── docs/
 │   ├── insights.sql      # 3 analytical SQL queries
 │   └── run_insights.py   # Runs and prints insight results
@@ -118,9 +121,10 @@ Visit `http://localhost:5500` in your browser.
 | Method | Route | Params | Returns |
 |---|---|---|---|
 | GET | `/api/trips` | `borough`, `time_of_day` | Filtered trip records with zone names |
-| GET | `/api/busiest-zones` | — | Top 10 pickup zones by trip count |
-| GET | `/api/fare-by-time` | — | Avg fare/mile per time-of-day bucket |
-| GET | `/api/speed-by-time` | — | Avg speed per time-of-day bucket |
+| GET | `/api/busiest-zones` | `borough`, `time_of_day` | Top 10 pickup zones by trip count |
+| GET | `/api/fare-by-time` | `borough`, `time_of_day` | Avg fare/mile per time-of-day bucket |
+| GET | `/api/speed-by-time` | `borough`, `time_of_day` | Avg speed per time-of-day bucket |
+| GET | `/api/geojson` | `borough`, `time_of_day` | GeoJSON FeatureCollection of 263 taxi zones with trip counts |
 
 ---
 
@@ -213,4 +217,5 @@ Morning average speed is 7.3 mph — the slowest period of the day, confirming p
 - **Busiest pickup zones** — bar chart, top 10 zones by trip count
 - **Fare per mile by time of day** — bar chart showing pricing patterns
 - **Average speed by time of day** — line chart showing congestion patterns
+- **Trip density map** — interactive Leaflet choropleth of all 263 NYC taxi zones, shaded by pickup volume; tooltips show zone name, borough, and trip count; responds to borough and time-of-day filters
 - **Recent trips table** — pickup time, zone, distance, fare, speed, time of day
