@@ -18,10 +18,33 @@ def query_db(sql, args=()):
     return [dict(r) for r in rows]
 
 
-@app.route("/api/trips")
-def trips():
+def build_filters(alias=""):
+    """Read the shared ?borough= and ?time_of_day= query params and turn them
+    into a SQL fragment + bound args. Every data route uses this so the table,
+    the stat cards AND the charts all respond to the same filters.
+
+    `alias` is an optional table prefix (e.g. "t.") for queries that alias the
+    trips table. The fragment is meant to follow a `WHERE 1=1`, so it always
+    begins with " AND ..." (or is empty when no filters are set).
+    """
     borough = request.args.get("borough")
     tod     = request.args.get("time_of_day")
+    sql, args = "", []
+    if borough:
+        sql += (f" AND {alias}pu_zone_id IN "
+                "(SELECT z.zone_id FROM zones z "
+                "JOIN boroughs b ON z.borough_id = b.borough_id "
+                "WHERE b.borough_name = ?)")
+        args.append(borough)
+    if tod:
+        sql += f" AND {alias}time_of_day = ?"
+        args.append(tod)
+    return sql, args
+
+
+@app.route("/api/trips")
+def trips():
+    where, args = build_filters(alias="t.")
     sql = ("SELECT t.*, "
            "puz.zone_name AS pu_zone, "
            "pub.borough_name AS pu_borough, "
@@ -32,24 +55,14 @@ def trips():
            "JOIN boroughs pub ON puz.borough_id = pub.borough_id "
            "JOIN zones doz ON t.do_zone_id = doz.zone_id "
            "JOIN boroughs dob ON doz.borough_id = dob.borough_id "
-           "WHERE 1=1")
-    args = []
-    if borough:
-        sql += (" AND t.pu_zone_id IN "
-                "(SELECT z.zone_id FROM zones z "
-                "JOIN boroughs b ON z.borough_id = b.borough_id "
-                "WHERE b.borough_name = ?)")
-        args.append(borough)
-    if tod:
-        sql += " AND t.time_of_day = ?"
-        args.append(tod)
-    sql += " LIMIT 500"
+           "WHERE 1=1" + where + " LIMIT 500")
     return jsonify(query_db(sql, args))
 
 
 @app.route("/api/busiest-zones")
 def busiest_zones():
-    rows = query_db("SELECT pu_zone_id FROM trips")
+    where, args = build_filters()
+    rows = query_db("SELECT pu_zone_id FROM trips WHERE 1=1" + where, args)
     ranked = rank_busiest(rows)
     # swap the zone IDs for names (chart labels), algorithm itself untouched
     names = {z["zone_id"]: z["zone_name"]
@@ -60,6 +73,38 @@ def busiest_zones():
 
 
 def rank_busiest(rows):
+    """Rank pickup zones by trip volume — custom, no built-in helpers.
+
+    Pseudo-code
+    -----------
+        function rank_busiest(rows):
+            counts = empty map
+            for each row in rows:                 # manual count, no Counter
+                z = row.pu_zone_id
+                counts[z] = counts[z] + 1         # default 0 if unseen
+
+            items = list of (zone, count) pairs from counts
+            n = length(items)
+
+            for i from 0 to n-1:                  # selection sort, descending
+                biggest = i
+                for j from i+1 to n-1:
+                    if items[j].count > items[biggest].count:
+                        biggest = j
+                swap items[i] and items[biggest]
+
+            return first 10 of items as {zone, trips}
+
+    Complexity
+    ----------
+        Time : O(n + k^2)  — O(n) counting pass over n trips, then an
+               O(k^2) selection sort over k distinct zones.
+        Space: O(k)        — the counts map plus the items list.
+
+    k (distinct NYC taxi zones) is small and bounded (~260), so the k^2
+    sort is effectively constant; the linear counting pass dominates.
+    Full write-up and design justification in docs/algorithm.md.
+    """
     # 1) count trips per zone by hand
     counts = {}
     for r in rows:
@@ -85,21 +130,25 @@ _TOD_ORDER = ("CASE time_of_day "
 
 @app.route("/api/fare-by-time")
 def fare_by_time():
+    where, args = build_filters()
     return jsonify(query_db(
         "SELECT time_of_day, "
         "ROUND(AVG(fare_per_mile), 2) AS avg_fare_per_mile, "
         "COUNT(*) AS trips "
-        "FROM trips GROUP BY time_of_day ORDER BY " + _TOD_ORDER
+        "FROM trips WHERE 1=1" + where +
+        " GROUP BY time_of_day ORDER BY " + _TOD_ORDER, args
     ))
 
 
 @app.route("/api/speed-by-time")
 def speed_by_time():
+    where, args = build_filters()
     return jsonify(query_db(
         "SELECT time_of_day, "
         "ROUND(AVG(avg_speed_mph), 2) AS avg_speed, "
         "COUNT(*) AS trips "
-        "FROM trips GROUP BY time_of_day ORDER BY " + _TOD_ORDER
+        "FROM trips WHERE 1=1" + where +
+        " GROUP BY time_of_day ORDER BY " + _TOD_ORDER, args
     ))
 
 
